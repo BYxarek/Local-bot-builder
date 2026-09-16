@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../NativeBot.Core/NativeBot.Core.csproj" />
+    <ProjectReference Include="../NativeBot.Storage/NativeBot.Storage.csproj" />
+    <ProjectReference Include="../NativeBot.Telegram/NativeBot.Telegram.csproj" />
+    <ProjectReference Include="../NativeBot.Agent/NativeBot.Agent.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <Target Name="CopyAgent" AfterTargets="Build">
+    <ItemGroup><AgentFiles Include="$(MSBuildThisFileDirectory)..\NativeBot.Agent\bin\$(Configuration)\net10.0\**\*" /></ItemGroup>
+    <Copy SourceFiles="@(AgentFiles)" DestinationFiles="@(AgentFiles->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

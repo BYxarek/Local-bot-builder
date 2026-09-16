@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/NativeBot.Core/NativeBot.Core.csproj" />
+    <ProjectReference Include="../../src/NativeBot.Storage/NativeBot.Storage.csproj" />
+    <ProjectReference Include="../../src/NativeBot.Telegram/NativeBot.Telegram.csproj" />
+    <ProjectReference Include="../../src/NativeBot.Agent/NativeBot.Agent.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

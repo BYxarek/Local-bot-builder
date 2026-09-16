@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../NativeBot.Core/NativeBot.Core.csproj" />
+    <ProjectReference Include="../NativeBot.Storage/NativeBot.Storage.csproj" />
+    <ProjectReference Include="../NativeBot.Telegram/NativeBot.Telegram.csproj" />
+  </ItemGroup>
+</Project>

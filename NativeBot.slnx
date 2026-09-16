@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="src/NativeBot.Core/NativeBot.Core.csproj" />
+  <Project Path="src/NativeBot.Storage/NativeBot.Storage.csproj" />
+  <Project Path="src/NativeBot.Telegram/NativeBot.Telegram.csproj" />
+  <Project Path="src/NativeBot.Agent/NativeBot.Agent.csproj" />
+  <Project Path="src/NativeBot.App/NativeBot.App.csproj" />
+  <Project Path="tests/NativeBot.Tests/NativeBot.Tests.csproj" />
+</Solution>
