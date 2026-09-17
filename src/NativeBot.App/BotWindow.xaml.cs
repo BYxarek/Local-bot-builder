@@ -4,7 +4,6 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Microsoft.Win32;
 using NativeBot.Core;
 using NativeBot.Telegram;
 using MessageBox = System.Windows.MessageBox;
@@ -62,13 +61,12 @@ public partial class BotWindow : Window
             FlowNameBox.Text = draft.Name;
             foreach (var node in draft.Nodes) _nodes.Add(node);
         }
-        var closeBehavior = await App.Database.GetSettingAsync("CloseBehavior") ?? "ask";
+        var closeBehavior = await App.Database.GetSettingAsync("CloseBehavior") ?? "background";
         WebhookPublicUrlBox.Text = await App.Database.GetSettingAsync("WebhookPublicUrl") ?? "";
         WebhookListenUrlBox.Text = await App.Database.GetSettingAsync("WebhookListenUrl") ?? "http://localhost:8443";
         PrivacyModeDisabledBox.IsChecked = await App.Database.GetSettingAsync($"PrivacyModeDisabled:{_bot.Id}") == "true";
         foreach (ComboBoxItem item in UpdateModeBox.Items) item.IsSelected = Equals(item.Tag, _bot.UpdateMode.ToString());
         foreach (ComboBoxItem item in CloseBehaviorBox.Items) item.IsSelected = Equals(item.Tag, closeBehavior);
-        AgentAutoStartBox.IsChecked = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run")?.GetValue("NativeBot.Agent") is not null;
     }
 
     private async void Start_Click(object sender, RoutedEventArgs e)
@@ -114,7 +112,7 @@ public partial class BotWindow : Window
 
     private async void SaveDraft_Click(object sender, RoutedEventArgs e)
     {
-        if (_nodes.Count == 0) { MessageBox.Show("Добавьте хотя бы один блок."); return; }
+        if (_nodes.Count == 0) { MessageBox.Show(this, "Добавьте хотя бы один блок."); return; }
         await App.Database.SaveDraftAsync(_bot.Id, BuildFlow());
         RuntimeStatus.Text = "Черновик сохранён";
     }
@@ -124,7 +122,7 @@ public partial class BotWindow : Window
     private async void Publish_Click(object sender, RoutedEventArgs e)
     {
         var issues = ValidateFlow(showSuccess: false);
-        if (issues.Any(x => x.IsError)) { MessageBox.Show("Исправьте ошибки перед публикацией."); return; }
+        if (issues.Any(x => x.IsError)) { MessageBox.Show(this, "Исправьте ошибки перед публикацией."); return; }
         var version = await App.Database.PublishAsync(_bot.Id, BuildFlow());
         RuntimeStatus.Text = $"Опубликована версия {version.Version}";
     }
@@ -148,7 +146,7 @@ public partial class BotWindow : Window
         var flow = BuildFlow();
         var issues = new FlowValidator().Validate(flow).Concat(new TelegramFlowValidator().Validate(flow)).ToArray();
         ValidationList.ItemsSource = issues;
-        if (showSuccess && issues.Length == 0) MessageBox.Show("Ошибок не найдено.");
+        if (showSuccess && issues.Length == 0) MessageBox.Show(this, "Ошибок не найдено.");
         return issues;
     }
 
@@ -218,9 +216,9 @@ public partial class BotWindow : Window
 
     private async void TestBroadcast_Click(object sender, RoutedEventArgs e)
     {
-        if (UsersGrid.SelectedItem is not BotUser user) { MessageBox.Show("Выберите получателя на вкладке «Пользователи»."); return; }
+        if (UsersGrid.SelectedItem is not BotUser user) { MessageBox.Show(this, "Выберите получателя на вкладке «Пользователи»."); return; }
         var text = BroadcastTextBox.Text.Trim();
-        if (text.Length is 0 or > 4096) { MessageBox.Show("Введите от 1 до 4096 символов."); return; }
+        if (text.Length is 0 or > 4096) { MessageBox.Show(this, "Введите от 1 до 4096 символов."); return; }
         await App.Database.EnqueueOutboxAsync(new(Guid.NewGuid(), _bot.Id, user.TelegramId, "text", text, OutboxStatus.Pending, DateTimeOffset.UtcNow));
         _testedBroadcastText = text;
         RuntimeStatus.Text = "Тестовое сообщение поставлено в очередь";
@@ -230,9 +228,9 @@ public partial class BotWindow : Window
     {
         var name = BroadcastNameBox.Text.Trim();
         var text = BroadcastTextBox.Text.Trim();
-        if (string.IsNullOrWhiteSpace(name) || text.Length is 0 or > 4096) { MessageBox.Show("Укажите название и текст до 4096 символов."); return; }
-        if (_testedBroadcastText != text) { MessageBox.Show("Сначала отправьте тест этого сообщения выбранному пользователю."); return; }
-        if (_visibleUsers.Count == 0) { MessageBox.Show("Получатели не найдены."); return; }
+        if (string.IsNullOrWhiteSpace(name) || text.Length is 0 or > 4096) { MessageBox.Show(this, "Укажите название и текст до 4096 символов."); return; }
+        if (_testedBroadcastText != text) { MessageBox.Show(this, "Сначала отправьте тест этого сообщения выбранному пользователю."); return; }
+        if (_visibleUsers.Count == 0) { MessageBox.Show(this, "Получатели не найдены."); return; }
         var id = Guid.NewGuid();
         await App.Database.AddBroadcastAsync(new(id, _bot.Id, name, null, text, DateTimeOffset.UtcNow, BroadcastStatus.Running, _visibleUsers.Count));
         foreach (var user in _visibleUsers)
@@ -247,15 +245,6 @@ public partial class BotWindow : Window
     private async void RefreshLogs_Click(object sender, RoutedEventArgs e) =>
         LogsGrid.ItemsSource = await App.Database.GetLogsAsync(_bot.Id, TechnicalLogBox.IsChecked == true);
 
-    private void AgentAutoStart_Click(object sender, RoutedEventArgs e)
-    {
-        using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
-        if (AgentAutoStartBox.IsChecked == true)
-            key.SetValue("NativeBot.Agent", $"\"{Path.Combine(AppContext.BaseDirectory, "NativeBot.Agent.exe")}\" --db \"{App.DatabasePath}\"");
-        else
-            key.DeleteValue("NativeBot.Agent", false);
-    }
-
     private async void SaveWebhookSettings_Click(object sender, RoutedEventArgs e)
     {
         var mode = UpdateModeBox.SelectedItem is ComboBoxItem { Tag: "LongPolling" }
@@ -265,12 +254,12 @@ public partial class BotWindow : Window
         var listenUrl = WebhookListenUrlBox.Text.Trim().TrimEnd('/');
         if (mode == BotUpdateMode.Webhook && (!Uri.TryCreate(publicUrl, UriKind.Absolute, out var publicUri) || publicUri.Scheme != Uri.UriSchemeHttps))
         {
-            MessageBox.Show("Укажите корректный публичный HTTPS-адрес.");
+            MessageBox.Show(this, "Укажите корректный публичный HTTPS-адрес.");
             return;
         }
         if (mode == BotUpdateMode.Webhook && (!Uri.TryCreate(listenUrl, UriKind.Absolute, out var listenUri) || listenUri.Scheme is not ("http" or "https") || !listenUri.IsLoopback))
         {
-            MessageBox.Show("Локальный адрес должен иметь вид http://localhost:8443 или https://localhost:8443.");
+            MessageBox.Show(this, "Локальный адрес должен иметь вид http://localhost:8443 или https://localhost:8443.");
             return;
         }
         await App.Database.SetBotUpdateModeAsync(_bot.Id, mode);
@@ -305,7 +294,7 @@ public partial class BotWindow : Window
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException or System.Text.Json.JsonException)
         {
-            MessageBox.Show(exception.Message);
+            MessageBox.Show(this, exception.Message);
         }
     }
 

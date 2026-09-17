@@ -1,0 +1,129 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Id="BYxarek.NativeBot" Name="Native Bot Create" Manufacturer="BYxarek"
+           Version="0.1.0" Scope="perUser" Compressed="yes">
+    <!-- AllowDowngrades нужен для замены ранних пакетов, ошибочно помеченных как 1.0.0. -->
+    <MajorUpgrade AllowDowngrades="yes" />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+        <Directory Id="INSTALLFOLDER" Name="Native Bot Create">
+          <Component Id="ApplicationFiles" Guid="B38D8F6E-41E8-4DD4-B51F-31C65C2896BB">
+            <File Id="NativeBotApp" Source="$(var.PayloadDir)\NativeBot.App.exe" />
+            <RegistryValue Root="HKCU" Key="Software\BYxarek\NativeBot" Name="ApplicationInstalled"
+                           Value="1" Type="integer" KeyPath="yes" />
+            <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />
+          </Component>
+          <Component Id="AgentFiles" Guid="8E2CF4E6-5581-42E2-A6F8-E812AD4C99F3">
+            <File Id="NativeBotAgent" Source="$(var.PayloadDir)\NativeBot.Agent.exe" />
+            <RegistryValue Root="HKCU" Key="Software\BYxarek\NativeBot" Name="AgentInstalled"
+                           Value="1" Type="integer" KeyPath="yes" />
+          </Component>
+          <Component Id="UninstallFile" Guid="93D4266B-C917-4BB0-ADEA-396671633D9B">
+            <File Id="UninstallCommand" Source="Uninstall.cmd" />
+            <RegistryValue Root="HKCU" Key="Software\BYxarek\NativeBot" Name="UninstallFileInstalled"
+                           Value="1" Type="integer" KeyPath="yes" />
+          </Component>
+          <Component Id="AutoStart">
+            <RegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run"
+                           Name="NativeBot.App"
+                           Value="&quot;[INSTALLFOLDER]NativeBot.App.exe&quot; --autostart --high-priority"
+                           Type="string" KeyPath="yes" />
+            <RemoveRegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run"
+                                 Name="NativeBot.Agent" />
+          </Component>
+          <Component Id="StartMenuShortcutComponent" Guid="72547133-C9E6-48A6-A073-B90F1292F0AC"
+                     Condition="ADD_START_MENU = 1">
+            <Shortcut Id="StartMenuShortcut" Directory="ApplicationProgramsFolder"
+                      Name="Native Bot Create" Target="[INSTALLFOLDER]NativeBot.App.exe" WorkingDirectory="INSTALLFOLDER" />
+            <Shortcut Id="UninstallShortcut" Directory="ApplicationProgramsFolder"
+                      Name="Удалить Native Bot Create" Target="[INSTALLFOLDER]Uninstall.cmd" WorkingDirectory="INSTALLFOLDER" />
+            <RegistryValue Root="HKCU" Key="Software\BYxarek\NativeBot" Name="StartMenuShortcutInstalled"
+                           Value="1" Type="integer" KeyPath="yes" />
+            <RemoveFolder Id="RemoveStartMenuFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+          </Component>
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="Native Bot Create" />
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="Native Bot Create">
+      <ComponentRef Id="ApplicationFiles" />
+      <ComponentRef Id="AgentFiles" />
+      <ComponentRef Id="UninstallFile" />
+      <ComponentRef Id="AutoStart" />
+      <ComponentRef Id="StartMenuShortcutComponent" />
+    </Feature>
+
+    <Property Id="ADD_START_MENU" Value="1" Secure="yes" />
+    <Property Id="ARPCOMMENTS" Value="Версия 0.1.0 beta 1" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Запустить Native Bot Create" />
+    <CustomAction Id="LaunchApplication" FileRef="NativeBotApp" ExeCommand="" Return="asyncNoWait" Impersonate="yes" />
+
+    <UI Id="NativeBotUI">
+      <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+      <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+      <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+      <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+      <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+      <DialogRef Id="BrowseDlg" />
+      <DialogRef Id="DiskCostDlg" />
+      <DialogRef Id="ErrorDlg" />
+      <DialogRef Id="FatalError" />
+      <DialogRef Id="FilesInUse" />
+      <DialogRef Id="InstallDirDlg" />
+      <DialogRef Id="MaintenanceTypeDlg" />
+      <DialogRef Id="MaintenanceWelcomeDlg" />
+      <DialogRef Id="MsiRMFilesInUse" />
+      <DialogRef Id="PrepareDlg" />
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ResumeDlg" />
+      <DialogRef Id="UserExit" />
+      <DialogRef Id="VerifyReadyDlg" />
+      <DialogRef Id="WelcomeDlg" />
+
+      <Dialog Id="InstallOptionsDlg" Width="370" Height="270" Title="[ProductName]">
+        <Control Id="Title" Type="Text" X="15" Y="10" Width="340" Height="20"
+                 Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Параметры установки" />
+        <Control Id="Description" Type="Text" X="20" Y="42" Width="330" Height="30"
+                 Text="Выберите ярлыки, которые нужно создать." />
+        <Control Id="AddStartMenu" Type="CheckBox" X="20" Y="82" Width="330" Height="18"
+                 Property="ADD_START_MENU" CheckBoxValue="1" Text="Добавить ярлык в меню «Пуск»" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&lt; Назад" />
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Далее &gt;" />
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Отмена">
+          <Publish Event="SpawnDialog" Value="CancelDlg" />
+        </Control>
+      </Dialog>
+
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication"
+               Order="1" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999" />
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Condition="NOT Installed" />
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Condition="Installed AND PATCH" />
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" />
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1" />
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="InstallOptionsDlg" Order="2" />
+      <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1" />
+      <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg" Order="2" />
+      <Publish Dialog="BrowseDlg" Control="OK" Event="SetTargetPath" Value="[_BrowseProperty]" Order="1" />
+      <Publish Dialog="BrowseDlg" Control="OK" Event="EndDialog" Value="Return" Order="2" />
+      <Publish Dialog="InstallOptionsDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" />
+      <Publish Dialog="InstallOptionsDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallOptionsDlg" Order="1" Condition="NOT Installed" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2" Condition="Installed AND NOT PATCH" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="3" Condition="Installed AND PATCH" />
+      <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg" />
+      <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg" />
+      <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg" />
+      <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg" />
+    </UI>
+    <UIRef Id="WixUI_Common" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+  </Package>
+</Wix>

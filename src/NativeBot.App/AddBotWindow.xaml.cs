@@ -12,6 +12,7 @@ public partial class AddBotWindow : Window
 
     private async void Connect_Click(object sender, RoutedEventArgs e)
     {
+        StatusPanel.Visibility = Visibility.Visible;
         ConnectButton.IsEnabled = false;
         StatusText.Text = "Проверяю подключение…";
         try

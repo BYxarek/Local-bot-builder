@@ -5,4 +5,5 @@
   <Project Path="src/NativeBot.Agent/NativeBot.Agent.csproj" />
   <Project Path="src/NativeBot.App/NativeBot.App.csproj" />
   <Project Path="tests/NativeBot.Tests/NativeBot.Tests.csproj" />
+  <Project Path="tests/NativeBot.UiTests/NativeBot.UiTests.csproj" />
 </Solution>

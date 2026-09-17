@@ -1,11 +1,112 @@
 <Application x:Class="NativeBot.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
   <Application.Resources>
-    <Style TargetType="Button">
-      <Setter Property="Padding" Value="14,7" />
-      <Setter Property="Margin" Value="4" />
-    </Style>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Indigo" SecondaryColor="LightBlue" />
+        <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+
+      <SolidColorBrush x:Key="PageBackgroundBrush" Color="#FFE8EAF2" />
+
+      <Style x:Key="TitleText" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignHeadlineMediumTextBlock}">
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+      </Style>
+      <Style x:Key="AppBarTitleText" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignTitleLargeTextBlock}">
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+      </Style>
+      <Style x:Key="SectionText" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignTitleMediumTextBlock}">
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+      </Style>
+      <Style x:Key="SupportingText" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignBodyMediumTextBlock}">
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.ForegroundLight}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+      </Style>
+      <Style x:Key="Card" TargetType="materialDesign:Card">
+        <Setter Property="Padding" Value="24" />
+        <Setter Property="UniformCornerRadius" Value="20" />
+        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <Setter Property="RenderTransform"><Setter.Value><TranslateTransform /></Setter.Value></Setter>
+        <Style.Triggers>
+          <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard>
+              <Storyboard>
+                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.28" />
+                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" From="12" To="0" Duration="0:0:0.32">
+                  <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+              </Storyboard>
+            </BeginStoryboard>
+          </EventTrigger>
+        </Style.Triggers>
+      </Style>
+      <Style x:Key="AnimatedPage" TargetType="FrameworkElement">
+        <Setter Property="RenderTransform"><Setter.Value><TranslateTransform /></Setter.Value></Setter>
+        <Style.Triggers>
+          <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard>
+              <Storyboard>
+                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.2" />
+                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" From="8" To="0" Duration="0:0:0.24">
+                  <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+              </Storyboard>
+            </BeginStoryboard>
+          </EventTrigger>
+        </Style.Triggers>
+      </Style>
+      <Style TargetType="Window" BasedOn="{StaticResource MaterialDesignWindow}">
+        <Setter Property="TextElement.FontSize" Value="14" />
+        <Setter Property="Background" Value="{DynamicResource PageBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+        <EventSetter Event="Loaded" Handler="Window_Loaded" />
+      </Style>
+      <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="Margin" Value="4" />
+        <Setter Property="Padding" Value="18,8" />
+      </Style>
+      <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+        <Setter Property="Margin" Value="4" />
+        <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
+      </Style>
+      <Style TargetType="PasswordBox" BasedOn="{StaticResource MaterialDesignOutlinedPasswordBox}">
+        <Setter Property="Margin" Value="4" />
+        <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
+      </Style>
+      <Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+        <Setter Property="Margin" Value="4" />
+        <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
+      </Style>
+      <Style TargetType="DatePicker" BasedOn="{StaticResource MaterialDesignOutlinedDatePicker}">
+        <Setter Property="Margin" Value="4" />
+        <Setter Property="materialDesign:HintAssist.IsFloating" Value="True" />
+      </Style>
+      <Style TargetType="DataGrid" BasedOn="{StaticResource MaterialDesignDataGrid}">
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="GridLinesVisibility" Value="None" />
+        <Setter Property="HeadersVisibility" Value="Column" />
+        <Setter Property="RowHeight" Value="48" />
+      </Style>
+      <Style TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignBodyMediumTextBlock}">
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+      </Style>
+      <Style TargetType="TabControl" BasedOn="{StaticResource MaterialDesignFilledTabControl}">
+        <Setter Property="Background" Value="{DynamicResource PageBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+      </Style>
+      <Style TargetType="ListBox" BasedOn="{StaticResource MaterialDesignListBox}">
+        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Card.Background}" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
+      </Style>
+      <Style TargetType="CheckBox" BasedOn="{StaticResource MaterialDesignCheckBox}" />
+      <Style TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignRadioButton}" />
+    </ResourceDictionary>
   </Application.Resources>
 </Application>

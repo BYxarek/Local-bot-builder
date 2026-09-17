@@ -3,7 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Win32;
 using NativeBot.Core;
 using MessageBox = System.Windows.MessageBox;
 
@@ -11,13 +13,34 @@ namespace NativeBot.App;
 
 public partial class MainWindow : Window
 {
-    private readonly System.Windows.Forms.NotifyIcon _trayIcon;
+    private System.Windows.Forms.NotifyIcon? _trayIcon;
     private bool _allowClose;
-    private string _closeBehavior = "ask";
+    private bool _settingsInitialized;
+    private string _closeBehavior = "background";
 
     public MainWindow()
     {
         InitializeComponent();
+        Activated += async (_, _) => _closeBehavior = await App.Database.GetSettingAsync("CloseBehavior") ?? "background";
+        Closing += Window_Closing;
+    }
+
+    internal async Task InitializeAsync()
+    {
+        InitializeTrayIcon();
+        _closeBehavior = await App.Database.GetSettingAsync("CloseBehavior") ?? "background";
+        using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+        key.DeleteValue("NativeBot.Agent", false);
+        AutoStartBox.IsChecked = key.GetValue("NativeBot.App") is not null;
+        ThemeBox.SelectedIndex = App.CurrentTheme == "dark" ? 1 : 0;
+        VersionTextBlock.Text = App.DisplayVersion;
+        _settingsInitialized = true;
+        await EnsureAgentAsync();
+        await RefreshAsync();
+    }
+
+    private void InitializeTrayIcon()
+    {
         _trayIcon = new System.Windows.Forms.NotifyIcon
         {
             Text = "Конструктор Telegram-ботов",
@@ -26,9 +49,6 @@ public partial class MainWindow : Window
             ContextMenuStrip = BuildTrayMenu()
         };
         _trayIcon.DoubleClick += (_, _) => ShowFromTray();
-        Loaded += async (_, _) => { _closeBehavior = await App.Database.GetSettingAsync("CloseBehavior") ?? "ask"; await EnsureAgentAsync(); await RefreshAsync(); };
-        Activated += async (_, _) => _closeBehavior = await App.Database.GetSettingAsync("CloseBehavior") ?? "ask";
-        Closing += Window_Closing;
     }
 
     private System.Windows.Forms.ContextMenuStrip BuildTrayMenu()
@@ -57,6 +77,22 @@ public partial class MainWindow : Window
     }
 
     private async void PauseAll_Click(object sender, RoutedEventArgs e) => await SendAgentCommandAsync("pause");
+
+    private void AutoStart_Click(object sender, RoutedEventArgs e)
+    {
+        using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+        if (AutoStartBox.IsChecked == true)
+            key.SetValue("NativeBot.App", $"\"{Path.Combine(AppContext.BaseDirectory, "NativeBot.App.exe")}\" --autostart --high-priority");
+        else
+            key.DeleteValue("NativeBot.App", false);
+    }
+
+    private async void ThemeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_settingsInitialized || ThemeBox.SelectedItem is not ComboBoxItem { Tag: string theme }) return;
+        App.ApplyTheme(theme);
+        await App.Database.SetSettingAsync("AppTheme", theme);
+    }
 
     private async Task EnsureAgentAsync()
     {
@@ -90,7 +126,7 @@ public partial class MainWindow : Window
         if (_closeBehavior == "background") { e.Cancel = true; Hide(); return; }
         if (_closeBehavior == "exit") { _ = SendAgentCommandAsync("exit"); _allowClose = true; return; }
 
-        var answer = MessageBox.Show(
+        var answer = MessageBox.Show(this,
             "Да — продолжить работу ботов в фоне.\nНет — завершить приложение и ботов.\nОтмена — вернуться в приложение.",
             "Закрытие приложения", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
         if (answer == MessageBoxResult.Cancel) { e.Cancel = true; return; }
@@ -104,12 +140,12 @@ public partial class MainWindow : Window
         _allowClose = true;
     }
 
-    private void ShowFromTray() { Show(); WindowState = WindowState.Normal; Activate(); }
-    private void CloseCompletely() { _allowClose = true; _trayIcon.Dispose(); Close(); }
+    internal void ShowFromTray() { Show(); if (WindowState == WindowState.Minimized) WindowState = WindowState.Maximized; Activate(); }
+    private void CloseCompletely() { _allowClose = true; _trayIcon?.Dispose(); Close(); }
 
     protected override void OnClosed(EventArgs e)
     {
-        _trayIcon.Dispose();
+        _trayIcon?.Dispose();
         base.OnClosed(e);
     }
 }

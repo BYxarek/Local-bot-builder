@@ -55,6 +55,6 @@ public partial class UserWindow : Window
             await App.Database.SetUserFieldAsync(_user.BotId, _user.TelegramId, FieldNameBox.Text.Trim(), FieldKeyBox.Text.Trim(), VariableType.Text, FieldValueBox.Text);
             await RefreshAsync();
         }
-        catch (ArgumentException exception) { MessageBox.Show(exception.Message); }
+        catch (ArgumentException exception) { MessageBox.Show(this, exception.Message); }
     }
 }
